@@ -212,6 +212,8 @@ def make_trainer(
         train_sampling_strategy="group_by_length",  # transformers v5 name for group_by_length=True
         fp16=torch.cuda.is_available(),
         dataloader_pin_memory=torch.cuda.is_available(),
+        # On MPS, empty the allocator cache every 25 steps so it cannot grow past physical memory.
+        torch_empty_cache_steps=25 if pick_device() == "mps" else None,
         report_to="none",
         logging_steps=10,
         seed=seed,
