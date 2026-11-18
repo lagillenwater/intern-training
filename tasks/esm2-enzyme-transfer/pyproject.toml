@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "network: test needs internet access",
+    "model: test downloads or runs an ESM-2 model",
+]

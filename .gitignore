@@ -1,0 +1,6 @@
+tasks/*/reference/
+tasks/*/outputs/
+.venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
