@@ -23,6 +23,9 @@ from helpers.data import CLASS_NAMES
 
 MODEL_NAME = "facebook/esm2_t6_8M_UR50D"
 N_CLASSES = len(CLASS_NAMES)
+# Batches are padded to a multiple of this many tokens. Few distinct tensor shapes keep the
+# MPS (Apple Silicon) allocator cache from growing without bound; 1024 is a multiple of it.
+PAD_MULTIPLE = 64
 
 
 def pick_device() -> str:
@@ -69,6 +72,7 @@ def _run_batches(sequences, tokenizer, model, batch_size, max_length, summarize)
         batch = tokenizer(
             [sequences[i] for i in idx],
             padding=True,
+            pad_to_multiple_of=PAD_MULTIPLE,
             truncation=True,
             max_length=max_length,
             return_special_tokens_mask=True,
@@ -217,7 +221,7 @@ def make_trainer(
         args=args,
         train_dataset=train_set,
         eval_dataset=val_set,
-        data_collator=DataCollatorWithPadding(tokenizer),
+        data_collator=DataCollatorWithPadding(tokenizer, pad_to_multiple_of=PAD_MULTIPLE),
         processing_class=tokenizer,
         compute_metrics=_compute_metrics,
         class_weights=weights,
