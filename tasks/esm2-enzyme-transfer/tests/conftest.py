@@ -87,3 +87,29 @@ def preds_fixture():
             )
         )
     return pd.concat(frames, ignore_index=True)
+
+
+def _cut(df, n_per_class, offset=0):
+    """Take n_per_class rows per class, with sequences cut to 60 residues."""
+    ranked = df.sort_values("accession")
+    rank = ranked.groupby("ec_class").cumcount()
+    picked = ranked[(rank >= offset) & (rank < offset + n_per_class)]
+    picked = picked.assign(sequence=picked["sequence"].str.slice(0, 60))
+    return picked.reset_index(drop=True)
+
+
+@pytest.fixture(scope="session")
+def tiny_df():
+    """14 human rows (2 per class), sequences cut to 60 residues."""
+    from helpers.data import load_dataset
+
+    return _cut(load_dataset(), 2)
+
+
+@pytest.fixture(scope="session")
+def tiny_train_val():
+    """(train_df, val_df): 2 train rows and 1 val row per class, sequences cut to 60 residues."""
+    from helpers.data import load_dataset
+
+    df = load_dataset()
+    return _cut(df[df["split"] == "train"], 2), _cut(df[df["split"] == "val"], 1)
