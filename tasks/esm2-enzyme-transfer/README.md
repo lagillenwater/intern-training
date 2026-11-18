@@ -236,11 +236,11 @@ You answer check-in questions without AI. If something is shaky at check-in 1 or
 7. Click the notebook you want, for example `tasks/esm2-enzyme-transfer/notebooks/00_python_primer.ipynb`.
 8. If Colab warns that the notebook was not written by Google, click **Run anyway**. The notebook came from your own copy.
 9. For Notebooks 02, 03, and 05, switch to a GPU before you run anything: **Runtime > Change runtime type**, choose **T4 GPU**, and click **Save**.
-10. Run the first cell, the setup cell: click on it and press Shift+Enter (or click the play button on its left). When it asks to connect to Google Drive, click **Connect to Google Drive**, choose your personal account, and allow access.
+10. Run the first cell, the setup cell: click on it and press Shift+Enter (or click the play button on its left). Then run the Configuration cell just below it. The Configuration cell asks to connect Google Drive: click **Connect to Google Drive**, choose your personal account, and allow access.
 
-### What the setup cell does
+### What the setup and Configuration cells do
 
-Every notebook starts with a setup cell. It downloads the data and helper code for the task and connects your Google Drive. Things that take a long time to make, such as embeddings and your trained model, are saved in your Drive in `MyDrive/esm2-enzyme-transfer/`, in a folder for your run. Later notebooks load them from there.
+Every notebook starts with a setup cell. It downloads the data and helper code for the task and installs the Python packages it needs. The Configuration cell just below it connects your Google Drive. Things that take a long time to make, such as embeddings and your trained model, are saved in your Drive in `MyDrive/esm2-enzyme-transfer/`, in a folder for your run. Later notebooks load them from there.
 
 So if Colab resets, or you come back on a new day, you only need to rerun the first cells of the notebook you are working on. You do not have to redo earlier notebooks.
 
@@ -260,7 +260,7 @@ Save at the end of every session, and whenever you finish a big step. Always use
 
 1. Open the notebook from your working branch.
 2. For Notebooks 02, 03, and 05, switch the runtime to **T4 GPU**.
-3. Run the setup cell and connect Google Drive.
+3. Run the setup cell, then the Configuration cell below it, and connect Google Drive when it asks.
 4. Work through the cells in order, from top to bottom.
 5. Save with **File > Save a copy in GitHub**, to your working branch.
 6. When you are done, click **Runtime > Disconnect and delete runtime**, so you do not use up free GPU time while you are away. Your notebook stays saved in GitHub, and your saved files stay in Drive.
