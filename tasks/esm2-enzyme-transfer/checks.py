@@ -114,24 +114,24 @@ def check_species_list(species) -> bool:
         return _report(False, "", f"species should be a list (square brackets), but it is a {type(species).__name__}.")
     missing = [s for s in SPECIES_ORDER if s not in species]
     extra = [s for s in species if s not in SPECIES_ORDER]
-    if missing or extra or len(species) != len(set(species)):
-        return _report(
-            False, "",
-            f"your list has {len(species)} items; check it for missing, extra, or repeated species names "
-            f"(missing: {', '.join(missing) or 'none'}; not recognized: {', '.join(map(str, extra)) or 'none'}).",
-        )
+    if missing:
+        return _report(False, "", f"your list is missing {len(missing)} species.")
+    if extra:
+        return _report(False, "", f"your list has {len(extra)} extra item(s) that are not one of the species.")
+    if len(species) != len(set(species)):
+        return _report(False, "", "your list repeats a species.")
     return _report(True, "your list has all five species.", "")
 
 
 @_safe
-def check_ec_class_function(fn) -> bool:
-    if _unfilled(fn, "fn"):
+def check_ec_class_function(first_ec_class) -> bool:
+    if _unfilled(first_ec_class, "first_ec_class"):
         return False
-    if not callable(fn):
-        return _report(False, "", "fn should be a function (made with def), but it is not callable.")
+    if not callable(first_ec_class):
+        return _report(False, "", "first_ec_class should be a function (made with def), but it is not callable.")
     for example, want in [("3.4.21.4", 3), ("2.7.11.1", 2), ("1.2.1.12; 1.1.1.27", 1), ("3.4.-.-", 3)]:
         try:
-            got = fn(example)
+            got = first_ec_class(example)
         except Exception as err:  # noqa: BLE001
             text = " ".join(str(err).split())[:80]
             return _report(False, "", f'your function raised {type(err).__name__}: {text} for input "{example}".')
@@ -143,23 +143,23 @@ def check_ec_class_function(fn) -> bool:
 
 
 @_safe
-def check_species_counts(counts, df) -> bool:
-    if _unfilled(counts, "counts"):
+def check_species_counts(species_counts, df) -> bool:
+    if _unfilled(species_counts, "species_counts"):
         return False
-    if not isinstance(counts, pd.Series):
-        return _report(False, "", f"counts should be a pandas Series (what value_counts() gives), but it is a {type(counts).__name__}.")
+    if not isinstance(species_counts, pd.Series):
+        return _report(False, "", f"species_counts should be a pandas Series (what value_counts() gives), but it is a {type(species_counts).__name__}.")
     want = df["species"].value_counts()
-    ok = set(counts.index) == set(want.index) and bool((counts.reindex(want.index).to_numpy() == want.to_numpy()).all())
-    return _report(ok, "your counts match the table.", "your counts do not match the table. Did you count the species column of df?")
+    ok = set(species_counts.index) == set(want.index) and bool((species_counts.reindex(want.index).to_numpy() == want.to_numpy()).all())
+    return _report(ok, "your counts match the table.", "species_counts does not match the table. Did you count the species column of df?")
 
 
 @_safe
-def check_mean_length(value, df, species: str = "yeast") -> bool:
-    if _unfilled(value, "value"):
+def check_mean_length(yeast_mean_length, df, species: str = "yeast") -> bool:
+    if _unfilled(yeast_mean_length, "yeast_mean_length"):
         return False
     want = df.loc[df["species"] == species, "length"].mean()
     return _check_number(
-        value, "value", want, 1e-6, f"the mean length for {species} matches.",
+        yeast_mean_length, "yeast_mean_length", want, 1e-6, f"the mean length for {species} matches.",
         f"Did you keep only the {species} rows and take the mean of the length column?",
     )
 
@@ -181,38 +181,38 @@ def check_class_counts(counts, df) -> bool:
 
 
 @_safe
-def check_majority_accuracy(value, df) -> bool:
-    if _unfilled(value, "value"):
+def check_majority_accuracy(majority_accuracy, df) -> bool:
+    if _unfilled(majority_accuracy, "majority_accuracy"):
         return False
     train = df[(df["species"] == "human") & (df["split"] == "train")]
     want = train["ec_class"].value_counts(normalize=True).max()
     return _check_number(
-        value, "value", want, 1e-6, "your majority-class accuracy is right.",
+        majority_accuracy, "majority_accuracy", want, 1e-6, "your majority-class accuracy is right.",
         "It should be a fraction between 0 and 1: the share of human training proteins in their most common class.",
     )
 
 
 @_safe
-def check_fraction_truncated(value, df) -> bool:
-    if _unfilled(value, "value"):
+def check_fraction_truncated(fraction_truncated, df) -> bool:
+    if _unfilled(fraction_truncated, "fraction_truncated"):
         return False
     want = (df["length"] > MAX_RESIDUES).mean()
     return _check_number(
-        value, "value", want, 1e-6, "your fraction of too-long proteins is right.",
+        fraction_truncated, "fraction_truncated", want, 1e-6, "your fraction of too-long proteins is right.",
         "It should be a fraction between 0 and 1: proteins longer than the model's limit divided by all proteins.",
     )
 
 
 @_safe
-def check_multiclass_count(n, raw_human) -> bool:
-    if _unfilled(n, "n"):
+def check_multiclass_count(n_multiclass, raw_human) -> bool:
+    if _unfilled(n_multiclass, "n_multiclass"):
         return False
     want = int(raw_human["ec"].fillna("").map(lambda ec: len(ec_classes(ec)) > 1).sum())
-    if not _is_number(n):
-        return _report(False, "", f"n should be a single number, but it is a {type(n).__name__}.")
+    if not _is_number(n_multiclass):
+        return _report(False, "", f"n_multiclass should be a single number, but it is a {type(n_multiclass).__name__}.")
     return _report(
-        int(n) == want and float(n) == int(n), "your count of multi-class proteins is right.",
-        f"n is {n:,}, which does not match. Count the rows whose ec column lists more than one top-level class.",
+        int(n_multiclass) == want and float(n_multiclass) == int(n_multiclass), "your count of multi-class proteins is right.",
+        f"n_multiclass is {n_multiclass:,}, which does not match. Count the rows whose ec column lists more than one top-level class.",
     )
 
 
@@ -257,12 +257,12 @@ def check_fitted_classifier(clf) -> bool:
 
 
 @_safe
-def check_macro_f1(value, y_true, y_pred) -> bool:
-    if _unfilled(value, "value"):
+def check_macro_f1(human_test_f1, y_true, y_pred) -> bool:
+    if _unfilled(human_test_f1, "human_test_f1"):
         return False
     want = f1_score(y_true, y_pred, average="macro", zero_division=0)
     return _check_number(
-        value, "value", want, 1e-9, "your macro-F1 is right.",
+        human_test_f1, "human_test_f1", want, 1e-9, "your macro-F1 is right.",
         'Use f1_score(y_true, y_pred, average="macro").',
     )
 
@@ -271,25 +271,25 @@ def check_macro_f1(value, y_true, y_pred) -> bool:
 
 
 @_safe
-def check_prediction_table(preds, df, model) -> bool:
-    if _unfilled(preds, "preds"):
+def check_prediction_table(preds, df, model, *, name="preds") -> bool:
+    if _unfilled(preds, name):
         return False
     if not isinstance(preds, pd.DataFrame):
-        return _report(False, "", f"preds should be a table (DataFrame), but it is a {type(preds).__name__}.")
+        return _report(False, "", f"{name} should be a table (DataFrame), but it is a {type(preds).__name__}.")
     pred_col = f"y_pred_{model}"
     absent = [c for c in ["accession", "species", "y_true", pred_col] if c not in preds.columns]
     if absent:
-        return _report(False, "", f"preds is missing the column(s): {', '.join(absent)}.")
+        return _report(False, "", f"{name} is missing the column(s): {', '.join(absent)}.")
     test = df[df["split"] == "test"]
     got, want = preds["accession"], set(test["accession"])
     if got.duplicated().any():
-        return _report(False, "", "preds lists some proteins more than once.")
+        return _report(False, "", f"{name} lists some proteins more than once.")
     extra = set(got) - want
     if extra:
         kind = "not test proteins" if extra & set(df["accession"]) else "not in the dataset at all"
-        return _report(False, "", f"preds has {len(preds):,} rows, and some of them are {kind}. Keep only the rows where split is test.")
+        return _report(False, "", f"{name} has {len(preds):,} rows, and some of them are {kind}. Keep only the rows where split is test.")
     if want - set(got):
-        return _report(False, "", f"preds has {len(preds):,} rows and is missing some test proteins. Predict every protein where split is test.")
+        return _report(False, "", f"{name} has {len(preds):,} rows and is missing some test proteins. Predict every protein where split is test.")
     values = pd.to_numeric(preds[pred_col], errors="coerce")
     if values.isna().any() or not values.isin(CLASS_LABELS).all():
         return _report(False, "", f"{pred_col} should hold class numbers from 1 to 7 only.")
@@ -332,13 +332,13 @@ def check_saved_model(path) -> bool:
 
 
 @_safe
-def check_species_f1(value, preds, species, model) -> bool:
-    if _unfilled(value, "value"):
+def check_species_f1(value, preds, species, model, *, name="the yeast macro-F1") -> bool:
+    if _unfilled(value, name):
         return False
     rows = preds[preds["species"] == species]
     want = f1_score(rows["y_true"], rows[f"y_pred_{model}"], average="macro", zero_division=0)
     return _check_number(
-        value, "value", want, 1e-9, f"your {species} macro-F1 for {model} is right.",
+        value, name, want, 1e-9, f"your {species} macro-F1 for {model} is right.",
         f"Score only the {species} rows, using y_true and y_pred_{model}.",
     )
 
@@ -371,36 +371,36 @@ def check_results_table(results, preds) -> bool:
 
 
 @_safe
-def check_umap_coords(coords, n) -> bool:
-    if _unfilled(coords, "coords"):
+def check_umap_coords(coords, n, *, name="coords") -> bool:
+    if _unfilled(coords, name):
         return False
     arr = np.asarray(coords)
     if arr.ndim != 2 or arr.shape[1] != 2:
-        return _report(False, "", f"coords has shape {arr.shape}; it should have two columns, one for x and one for y.")
+        return _report(False, "", f"{name} has shape {arr.shape}; it should have two columns, one for x and one for y.")
     if arr.shape[0] != n:
-        return _report(False, "", f"coords has {arr.shape[0]:,} rows but should have one per protein ({n:,}).")
+        return _report(False, "", f"{name} has {arr.shape[0]:,} rows but should have one per protein ({n:,}).")
     if not np.isfinite(arr.astype(float)).all():
-        return _report(False, "", "coords has values that are not finite (NaN or infinity).")
-    return _report(True, "coords has one finite x, y point per protein.", "")
+        return _report(False, "", f"{name} has values that are not finite (NaN or infinity).")
+    return _report(True, f"{name} has one finite x, y point per protein.", "")
 
 
 @_safe
-def check_misclassified(table, preds, species=("yeast", "ecoli")) -> bool:
-    if _unfilled(table, "table"):
+def check_misclassified(misclassified, preds, species=("yeast", "ecoli")) -> bool:
+    if _unfilled(misclassified, "misclassified"):
         return False
-    if not isinstance(table, pd.DataFrame):
-        return _report(False, "", f"table should be a table (DataFrame), but it is a {type(table).__name__}.")
+    if not isinstance(misclassified, pd.DataFrame):
+        return _report(False, "", f"misclassified should be a table (DataFrame), but it is a {type(misclassified).__name__}.")
     cols = ["accession", "species", "y_true", "y_pred_finetuned", "uniprot_url"]
-    absent = [c for c in cols if c not in table.columns]
+    absent = [c for c in cols if c not in misclassified.columns]
     if absent:
-        return _report(False, "", f"table is missing the column(s): {', '.join(absent)}.")
+        return _report(False, "", f"misclassified is missing the column(s): {', '.join(absent)}.")
     names = [species] if isinstance(species, str) else list(species)
     errors = preds[preds["species"].isin(names) & (preds["y_true"] != preds["y_pred_finetuned"])]
-    if table["accession"].duplicated().any() or set(table["accession"]) != set(errors["accession"]):
-        return _report(False, "", f"table has {len(table):,} rows; it should list exactly the proteins the fine-tuned model got wrong in {' and '.join(names)}.")
-    merged = table.merge(errors, on="accession", suffixes=("", "_true"))
+    if misclassified["accession"].duplicated().any() or set(misclassified["accession"]) != set(errors["accession"]):
+        return _report(False, "", f"misclassified has {len(misclassified):,} rows; it should list exactly the proteins the fine-tuned model got wrong in {' and '.join(names)}.")
+    merged = misclassified.merge(errors, on="accession", suffixes=("", "_true"))
     if not ((merged["y_true"] == merged["y_true_true"]) & (merged["y_pred_finetuned"] == merged["y_pred_finetuned_true"])).all():
-        return _report(False, "", "the y_true or y_pred_finetuned values in table do not match preds for those proteins.")
-    if not (table["uniprot_url"] == UNIPROT_URL + table["accession"].astype(str)).all():
+        return _report(False, "", "the y_true or y_pred_finetuned values in misclassified do not match preds for those proteins.")
+    if not (misclassified["uniprot_url"] == UNIPROT_URL + misclassified["accession"].astype(str)).all():
         return _report(False, "", f"uniprot_url should be {UNIPROT_URL} followed by the accession.")
-    return _report(True, "your table lists the fine-tuned errors with working UniProt links.", "")
+    return _report(True, "misclassified lists the fine-tuned errors with working UniProt links.", "")

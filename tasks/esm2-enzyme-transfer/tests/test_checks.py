@@ -149,7 +149,7 @@ def test_unfilled_message_uses_variable_name(capsys):
     checks.check_fitted_classifier(...)
     assert capsys.readouterr().out.startswith("Not yet: fill in clf first.")
     checks.check_species_counts(None, None)
-    assert capsys.readouterr().out.startswith("Not yet: fill in counts first.")
+    assert capsys.readouterr().out.startswith("Not yet: fill in species_counts first.")
 
 
 @pytest.mark.parametrize("name", CHECK_NAMES)
@@ -301,3 +301,45 @@ def test_messages_do_not_leak_expected_numbers(cases, capsys):
     out = capsys.readouterr().out
     assert f"{good[0]:.3f}" not in out and str(good[0])[:6] not in out
     assert re.search(r"\d", out) is not None  # echoes the intern's own value
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("check_ec_class_function", "first_ec_class"),
+        ("check_species_counts", "species_counts"),
+        ("check_mean_length", "yeast_mean_length"),
+        ("check_majority_accuracy", "majority_accuracy"),
+        ("check_fraction_truncated", "fraction_truncated"),
+        ("check_multiclass_count", "n_multiclass"),
+        ("check_macro_f1", "human_test_f1"),
+        ("check_misclassified", "misclassified"),
+        ("check_hyperparameters", "num_epochs"),
+        ("check_saved_model", "path"),
+    ],
+)
+def test_unfilled_names_notebook_variable(name, expected, cases, capsys):
+    good, _ = cases[name]
+    getattr(checks, name)(None, *good[1:])
+    assert capsys.readouterr().out == f"Not yet: fill in {expected} first.\n"
+
+
+def test_name_keyword_is_used_in_messages(cases, capsys):
+    check_species_f1(None, cases["check_species_f1"][0][1], "yeast", "baseline", name="yeast_baseline_f1")
+    assert capsys.readouterr().out == "Not yet: fill in yeast_baseline_f1 first.\n"
+    check_umap_coords(None, 5, name="coords_after")
+    assert capsys.readouterr().out == "Not yet: fill in coords_after first.\n"
+    good, _ = cases["check_prediction_table"]
+    check_prediction_table(None, good[1], "baseline", name="ft_preds")
+    assert capsys.readouterr().out == "Not yet: fill in ft_preds first.\n"
+    check_umap_coords(np.zeros((3, 3)), 3, name="coords_after")
+    assert capsys.readouterr().out.startswith("Not yet: coords_after has shape")
+    check_prediction_table(good[0].iloc[:5], good[1], "baseline", name="ft_preds")
+    assert "ft_preds has 5 rows" in capsys.readouterr().out
+
+
+def test_species_list_counts_problems(capsys):
+    assert check_species_list(["human", "mouse", "fly", "yeast"]) is False
+    assert capsys.readouterr().out == "Not yet: your list is missing 1 species.\n"
+    assert check_species_list(SPECIES_ORDER + ["cat"]) is False
+    assert "1 extra" in capsys.readouterr().out
