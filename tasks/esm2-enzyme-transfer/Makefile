@@ -1,7 +1,7 @@
 VENV := .venv
 PY := $(VENV)/bin/python
 
-.PHONY: env test
+.PHONY: env test data
 
 env:
 	uv venv --allow-existing --python 3.12 $(VENV)
@@ -9,3 +9,6 @@ env:
 
 test:
 	$(PY) -m pytest -m "not network"
+
+data:
+	$(PY) -m scripts.download_data --out data
