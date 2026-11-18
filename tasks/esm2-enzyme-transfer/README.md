@@ -19,8 +19,7 @@ This is your task document. Read it before you start, and come back to it whenev
 - [How to ask for help](#how-to-ask-for-help)
 
 ## What you will do and why
-
-You have spent three weeks presenting on dimension reduction, neural networks, and transformers. Now you will use all three on real biological data. You will run a complete experiment yourself, from raw data to a final answer.
+ You will run a complete experiment yourself, from raw data to a final answer.
 
 Here is the plan:
 
@@ -32,9 +31,9 @@ Here is the plan:
 
 Scientists use these same steps when they want to know whether a model learned something real.
 
-The task takes about 10 hours, spread over several sessions on different days. You will mostly work on your own, in Google Colab in your web browser. Your mentor will meet with you for three short check-ins along the way. You will not install anything on your computer.
+The task takes about 10 hours, spread over several sessions on different days. You will mostly work on your own, in Google Colab in your web browser. 
 
-You do not need to know Python yet. Notebook 00 teaches the Python you need. It compares each idea to Java, which you already know, and it uses the enzyme data for its examples, so you also get to know the data.
+You do not need to know Python yet. Notebook 00 teaches the Python you need. It compares each idea to Java, and it uses the enzyme data for its examples, so you also get to know the data.
 
 ## Background
 
@@ -213,7 +212,7 @@ New words in this table:
 
 ### Check-ins
 
-Three times during the task, you meet your mentor for about 15 minutes. Your mentor asks you to explain ideas in your own words and to read code from your notebooks. Each check-in also has one "change one thing" question: you predict what a small change will do, then run it to see.
+Three times during the task. Can happen in-person or over email. Your mentor will ask you follow up questions to check for understanding. Each check-in also has one "change one thing" question: you predict what a small change will do, then run it to see.
 
 1. **Check-in 1, after Notebook 02:** the data, the label, how common each class is, embeddings, and what logistic regression does with them.
 2. **Check-in 2, after Notebook 04:** how the fine-tuned model compares with the baseline, how you measured that, and how the results differ from species to species.
