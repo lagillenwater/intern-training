@@ -29,6 +29,14 @@ from helpers.models import (
     pick_device,
     predict_classes,
 )
+from helpers.plots import (
+    compute_umap,
+    plot_confusion,
+    plot_confusion_grid,
+    plot_distance_curve,
+    plot_umap,
+)
+from helpers.session import in_colab, require_file, setup_workdir
 
 __all__ = [
     "CLASS_NAMES",
@@ -40,9 +48,11 @@ __all__ = [
     "bootstrap_ci",
     "build_dataset",
     "cached_embeddings",
+    "compute_umap",
     "ec_classes",
     "eggnog_ids",
     "embed_sequences",
+    "in_colab",
     "load_dataset",
     "load_divergence",
     "load_raw",
@@ -53,7 +63,13 @@ __all__ = [
     "paired_differences",
     "per_class_f1",
     "pick_device",
+    "plot_confusion",
+    "plot_confusion_grid",
+    "plot_distance_curve",
+    "plot_umap",
     "predict_classes",
+    "require_file",
     "score_table",
+    "setup_workdir",
     "task_dir",
 ]

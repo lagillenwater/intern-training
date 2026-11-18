@@ -89,6 +89,26 @@ def preds_fixture():
     return pd.concat(frames, ignore_index=True)
 
 
+@pytest.fixture
+def results_fixture(preds_fixture):
+    """Score table (species, model, macro_f1, accuracy, ci_low, ci_high) from the predictions fixture."""
+    from helpers.evaluation import score_table
+
+    return score_table(preds_fixture)
+
+
+@pytest.fixture
+def divergence_fixture():
+    """Divergence table with columns species, mya, source."""
+    return pd.DataFrame(
+        {
+            "species": ["human", "mouse", "fly", "yeast", "ecoli"],
+            "mya": [0, 90, 780, 1275, 4200],
+            "source": "fixture",
+        }
+    )
+
+
 def _cut(df, n_per_class, offset=0):
     """Take n_per_class rows per class, with sequences cut to 60 residues."""
     ranked = df.sort_values("accession")
