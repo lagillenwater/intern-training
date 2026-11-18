@@ -2,7 +2,7 @@ import nbformat
 import pytest
 
 from helpers import task_dir
-from scripts.build_notebooks import build, setup_cell, strip_solutions
+from scripts.build_notebooks import build, build_single, setup_cell, strip_solutions
 
 SRC = """# %%
 # TODO: fit the classifier
@@ -69,6 +69,30 @@ def test_no_colab_metadata_for_other_notebooks(tmp_path):
     build(tmp_path / "ref", tmp_path / "starter", tmp_path / "build")
     nb = nbformat.read(tmp_path / "starter/01_look.ipynb", as_version=4)
     assert "accelerator" not in nb.metadata
+
+
+def test_build_twice_is_identical(tmp_path):
+    (tmp_path / "ref/notebooks").mkdir(parents=True)
+    (tmp_path / "ref/notebooks/02_baseline.py").write_text("# %%\n" + SRC)
+    texts = []
+    for _ in range(2):
+        build(tmp_path / "ref", tmp_path / "starter", tmp_path / "build")
+        texts.append((tmp_path / "starter/02_baseline.ipynb").read_text())
+    assert texts[0] == texts[1]
+
+
+def test_build_single(tmp_path):
+    src = tmp_path / "tools" / "colab_timing.py"
+    src.parent.mkdir()
+    src.write_text("# %%\n" + SRC)
+    out = build_single(src, materials_ref="testref")
+    assert out == tmp_path / "tools" / "colab_timing.ipynb"
+    nb = nbformat.read(out, as_version=4)
+    assert "testref" in nb.cells[0].source
+    assert "LogisticRegression().fit" in out.read_text()
+    assert not (tmp_path / "reference").exists()
+    with pytest.raises(FileNotFoundError):
+        build_single(tmp_path / "missing.py")
 
 
 def test_committed_starters_have_no_solutions():

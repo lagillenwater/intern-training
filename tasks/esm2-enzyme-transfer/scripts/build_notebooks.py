@@ -115,7 +115,8 @@ def build_one(source: Path, out: Path, materials_ref: str, strip: bool) -> None:
         text = strip_solutions(text)
     nb = jupytext.reads(text, fmt="py:percent")
     nb.cells.insert(0, nbformat.v4.new_code_cell(setup_cell(materials_ref)))
-    for cell in nb.cells:
+    for index, cell in enumerate(nb.cells):
+        cell.id = f"cell-{index}"  # deterministic ids keep rebuilds byte-identical
         if cell.cell_type == "code":
             cell.outputs = []
             cell.execution_count = None
@@ -130,16 +131,24 @@ def build_one(source: Path, out: Path, materials_ref: str, strip: bool) -> None:
     nbformat.write(nb, out)
 
 
-def build(reference_dir: Path, starter_dir: Path, build_dir: Path, materials_ref: str = "esm2-v1",
-          only: Path = None) -> None:
-    """Build every reference/notebooks/NN_*.py (or just `only`) into full and starter notebooks."""
+def build_single(source: Path, materials_ref: str = "esm2-v1") -> Path:
+    """Build one percent-format .py (any path) into SOURCE.ipynb next to it, with no stripping."""
+    source = Path(source)
+    if not source.is_file():
+        raise FileNotFoundError(f"--only source not found: {source}")
+    out = source.with_suffix(".ipynb")
+    build_one(source, out, materials_ref, strip=False)
+    print(f"Built {out}")
+    return out
+
+
+def build(reference_dir: Path, starter_dir: Path, build_dir: Path, materials_ref: str = "esm2-v1") -> None:
+    """Build every reference/notebooks/NN_*.py into full and starter notebooks."""
     source_dir = reference_dir / "notebooks"
     if not reference_dir.exists() or not source_dir.exists():
         print(f"Reference directory not found: {reference_dir}; nothing to build.")
         return
     sources = sorted(source_dir.glob("[0-9][0-9]_*.py"))
-    if only is not None:
-        sources = [s for s in sources if s.resolve() == Path(only).resolve()]
     for source in sources:
         build_one(source, build_dir / f"{source.stem}.ipynb", materials_ref, strip=False)
         build_one(source, starter_dir / f"{source.stem}.ipynb", materials_ref, strip=True)
@@ -151,9 +160,12 @@ def main() -> None:
     task = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--materials-ref", default="esm2-v1", help="git branch or tag Colab clones")
-    parser.add_argument("--only", type=Path, help="build only this reference notebook source (.py path)")
+    parser.add_argument("--only", type=Path, help="build only this percent-format .py into SOURCE.ipynb next to it (no stripping)")
     args = parser.parse_args()
-    build(task / "reference", task / "notebooks", task / "reference" / "build", args.materials_ref, args.only)
+    if args.only is not None:
+        build_single(args.only, args.materials_ref)
+        return
+    build(task / "reference", task / "notebooks", task / "reference" / "build", args.materials_ref)
 
 
 if __name__ == "__main__":
