@@ -3,7 +3,10 @@ import pytest
 import torch
 
 import helpers.models
+from transformers import AutoModel, AutoTokenizer
+
 from helpers.models import (
+    EsmMeanPoolClassifier,
     cached_embeddings,
     embed_sequences,
     loss_history_frame,
@@ -69,3 +72,42 @@ def test_cached_embeddings_recomputes_on_mismatch(tmp_path, monkeypatch, tiny_df
     assert len(calls) == 1
     cached_embeddings(tiny_df.iloc[::-1], p)
     assert len(calls) == 2
+
+
+def _class_predictions(model, model_dir, sequences):
+    """Predicted classes (1-7) from an in-memory model, one batch, in eval mode."""
+    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    batch = tokenizer(sequences, padding=True, return_tensors="pt").to(model.device)
+    with torch.inference_mode():
+        logits = model.eval()(**batch).logits
+    return logits.argmax(dim=1).cpu().numpy() + 1
+
+
+def test_mean_pool_matches_embeddings(trained_tiny):
+    _, model_dir, val = trained_tiny
+    encoder, info = AutoModel.from_pretrained(model_dir, add_pooling_layer=False, output_loading_info=True)
+    assert not info["missing_keys"]  # every encoder weight comes from the save; no classifier needed
+    model = EsmMeanPoolClassifier.from_pretrained(model_dir).eval()
+    embeddings = torch.from_numpy(embed_sequences(list(val.sequence), str(model_dir)))
+    with torch.inference_mode():
+        from_embeddings = model.classifier(embeddings).argmax(dim=1).numpy() + 1
+    np.testing.assert_array_equal(from_embeddings, predict_classes(model_dir, list(val.sequence)))
+
+
+def test_mean_pool_ignores_padding(trained_tiny):
+    _, model_dir, _ = trained_tiny
+    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    model = EsmMeanPoolClassifier.from_pretrained(model_dir).eval()
+    with torch.inference_mode():
+        alone = model(**tokenizer([SHORT], return_tensors="pt")).logits
+        batched = model(**tokenizer([SHORT, ENO1], padding=True, return_tensors="pt")).logits
+    np.testing.assert_allclose(alone[0].numpy(), batched[0].numpy(), atol=1e-4)
+
+
+def test_saved_model_reloads(trained_tiny):
+    tr, model_dir, val = trained_tiny
+    seqs = list(val.sequence)
+    before = _class_predictions(tr.model, model_dir, seqs)
+    reloaded = EsmMeanPoolClassifier.from_pretrained(model_dir).to(tr.model.device)
+    assert isinstance(tr.model, EsmMeanPoolClassifier)
+    np.testing.assert_array_equal(_class_predictions(reloaded, model_dir, seqs), before)

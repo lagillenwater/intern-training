@@ -22,6 +22,7 @@ from helpers.evaluation import (
 )
 from helpers.models import (
     MODEL_NAME,
+    EsmMeanPoolClassifier,
     cached_embeddings,
     embed_sequences,
     loss_history_frame,
@@ -40,6 +41,7 @@ from helpers.session import in_colab, require_file, setup_workdir
 
 __all__ = [
     "CLASS_NAMES",
+    "EsmMeanPoolClassifier",
     "MAX_RESIDUES",
     "MODEL_NAME",
     "SPECIES",

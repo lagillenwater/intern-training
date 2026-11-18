@@ -10,14 +10,16 @@ import torch
 import transformers
 from sklearn.metrics import f1_score
 from sklearn.utils.class_weight import compute_class_weight
+from torch import nn
 from transformers import (
     AutoModel,
-    AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
     Trainer,
     TrainingArguments,
 )
+from transformers.modeling_outputs import SequenceClassifierOutput
+from transformers.models.esm.modeling_esm import EsmConfig, EsmModel, EsmPreTrainedModel
 
 from helpers.data import CLASS_NAMES
 
@@ -126,6 +128,45 @@ def cached_embeddings(
     return embeddings
 
 
+class EsmMeanPoolClassifier(EsmPreTrainedModel):
+    """ESM-2 encoder plus a linear layer that reads the mean of the residue embeddings.
+
+    The pooling is the same as embed_sequences: the final hidden states averaged over every
+    position that is not padding and not the start (cls) or end (eos) token. So the classifier
+    starts from the same protein summary the frozen baseline uses. The cls and eos token ids are
+    read from the config (make_trainer stores them), so a saved model loads without a tokenizer.
+    """
+
+    config_class = EsmConfig
+    base_model_prefix = "esm"
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.esm = EsmModel(config, add_pooling_layer=False)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.post_init()
+
+    def _residue_mask(self, input_ids, attention_mask):
+        """True at residue positions: attended, and not the cls, eos, or pad token."""
+        special = torch.tensor(
+            [self.config.cls_token_id, self.config.eos_token_id, self.config.pad_token_id], device=input_ids.device
+        )
+        return attention_mask.bool() & ~torch.isin(input_ids, special)
+
+    def forward(self, input_ids, attention_mask=None, labels=None, **kwargs) -> SequenceClassifierOutput:
+        if attention_mask is None:
+            attention_mask = torch.ones_like(input_ids)
+        hidden = self.esm(input_ids, attention_mask=attention_mask, **kwargs).last_hidden_state
+        keep = self._residue_mask(input_ids, attention_mask).unsqueeze(-1).to(hidden.dtype)
+        pooled = (hidden * keep).sum(dim=1) / keep.sum(dim=1).clamp(min=1)
+        logits = self.classifier(self.dropout(pooled))
+        loss = None
+        if labels is not None:
+            loss = nn.functional.cross_entropy(logits, labels.to(logits.device))
+        return SequenceClassifierOutput(loss=loss, logits=logits)
+
+
 class _SequenceDataset(torch.utils.data.Dataset):
     """Tokenized sequences with zero-based integer labels."""
 
@@ -178,15 +219,20 @@ def make_trainer(
     class_weighted: bool = True,
     seed: int = 0,
 ) -> Trainer:
-    """Build a Trainer that fine-tunes ESM-2 for 7-class EC prediction."""
+    """Build a Trainer that fine-tunes ESM-2 with a mean-pooling head for 7-class EC prediction."""
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    with _quiet_loading():
-        model = AutoModelForSequenceClassification.from_pretrained(
-            model_name,
-            num_labels=N_CLASSES,
-            id2label={k - 1: v for k, v in CLASS_NAMES.items()},
-            label2id={v: k - 1 for k, v in CLASS_NAMES.items()},
-        )
+    config = EsmConfig.from_pretrained(
+        model_name,
+        num_labels=N_CLASSES,
+        id2label={k - 1: v for k, v in CLASS_NAMES.items()},
+        label2id={v: k - 1 for k, v in CLASS_NAMES.items()},
+    )
+    # Saved with the model so the head's residue mask works when it is loaded without a tokenizer.
+    config.cls_token_id = tokenizer.cls_token_id
+    config.eos_token_id = tokenizer.eos_token_id
+    config.pad_token_id = tokenizer.pad_token_id
+    with _quiet_loading():  # the classifier layer is new, so its weights are freshly initialized
+        model = EsmMeanPoolClassifier.from_pretrained(model_name, config=config)
     train_set = _SequenceDataset(train_df, tokenizer, max_length)
     val_set = _SequenceDataset(val_df, tokenizer, max_length)
 
@@ -238,7 +284,7 @@ def predict_classes(
     device: str | None = None,
 ) -> np.ndarray:
     """Predicted EC class (1-7) for each sequence from a saved fine-tuned model."""
-    tokenizer, model = _load(AutoModelForSequenceClassification, str(model_path), device)
+    tokenizer, model = _load(EsmMeanPoolClassifier, str(model_path), device)
     result = _run_batches(
         sequences, tokenizer, model, batch_size, max_length, lambda out, batch, special: out.logits
     )
