@@ -1,0 +1,6 @@
+species	mya	source
+human	0	reference species
+mouse	87	TimeTree 5 (Kumar et al. 2022, Mol Biol Evol), timetree.org
+fly	694	TimeTree 5 (Kumar et al. 2022, Mol Biol Evol), timetree.org
+yeast	1275	TimeTree 5 (Kumar et al. 2022, Mol Biol Evol), timetree.org
+ecoli	4290	TimeTree 5 (Kumar et al. 2022, Mol Biol Evol), timetree.org

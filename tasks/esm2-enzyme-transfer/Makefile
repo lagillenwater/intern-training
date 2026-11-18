@@ -1,7 +1,7 @@
 VENV := .venv
 PY := $(VENV)/bin/python
 
-.PHONY: env test data
+.PHONY: env test data dataset
 
 env:
 	uv venv --allow-existing --python 3.12 $(VENV)
@@ -12,3 +12,6 @@ test:
 
 data:
 	$(PY) -m scripts.download_data --out data
+
+dataset:
+	$(PY) -m scripts.build_dataset
