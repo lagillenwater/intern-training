@@ -1,5 +1,8 @@
 VENV := .venv
 PY := $(VENV)/bin/python
+# Cap the PyTorch MPS (Apple Silicon) allocator cache during reference runs so fine-tuning does not
+# grow past physical memory and swap. Ignored on CUDA and CPU.
+MPS_ENV := PYTORCH_MPS_HIGH_WATERMARK_RATIO=1.0 PYTORCH_MPS_LOW_WATERMARK_RATIO=0.4
 
 .PHONY: env test data dataset notebooks reference verify-reference
 
@@ -32,7 +35,7 @@ reference: notebooks
 	  n=$$(basename $$f .ipynb); \
 	  if [ -n "$(NB)" ]; then case " $(NB) " in *" $${n%%_*} "*) ;; *) continue;; esac; fi; \
 	  echo "Running $$n"; start=$$(date +%s); \
-	  ENZYME_WORK_DIR="$(CURDIR)/reference/outputs" $(VENV)/bin/jupyter nbconvert --to notebook --execute \
+	  ENZYME_WORK_DIR="$(CURDIR)/reference/outputs" $(MPS_ENV) $(VENV)/bin/jupyter nbconvert --to notebook --execute \
 	    --ExecutePreprocessor.timeout=-1 --ExecutePreprocessor.kernel_name=python3 \
 	    --output-dir reference/executed $$f; \
 	  end=$$(date +%s); \
