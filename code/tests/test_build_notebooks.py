@@ -45,6 +45,13 @@ def test_setup_cell_uses_pins_and_ref():
     compile(cell, "setup", "exec")
 
 
+def test_setup_cell_uses_repo_root_layout():
+    cell = setup_cell("testref")
+    assert 'TASK_DIR = Path("/content/intern-training")' in cell
+    assert 'sys.path.insert(0, str(TASK_DIR / "code"))' in cell
+    assert "tasks/" not in cell
+
+
 def test_build(tmp_path):
     (tmp_path / "ref/notebooks").mkdir(parents=True)
     (tmp_path / "ref/notebooks/02_baseline.py").write_text("# %%\n" + SRC)

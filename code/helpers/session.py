@@ -18,7 +18,7 @@ def setup_workdir(run_name: str = "esm2_8M") -> Path:
 
     Uses $ENZYME_WORK_DIR/<run_name> if that variable is set. On Colab it mounts
     Google Drive so files survive after the session ends. Otherwise it uses
-    outputs/<run_name> inside the task folder.
+    outputs/<run_name> at the repository root.
     """
     env = os.environ.get("ENZYME_WORK_DIR")
     if env:

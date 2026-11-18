@@ -28,8 +28,8 @@ VAL_FOLDS = 17
 
 
 def task_dir() -> Path:
-    """Return the task folder (the one holding data/, helpers/, and scripts/)."""
-    return Path(__file__).resolve().parent.parent
+    """Return the repository root (the folder holding data/, notebooks/, and code/)."""
+    return Path(__file__).resolve().parents[2]
 
 
 def ec_classes(ec: str) -> set[int]:

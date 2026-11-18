@@ -1,5 +1,5 @@
-tasks/*/reference/
-tasks/*/outputs/
+/reference/
+/outputs/
 .venv/
 __pycache__/
 .pytest_cache/

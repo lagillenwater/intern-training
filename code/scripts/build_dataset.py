@@ -1,6 +1,6 @@
 """Build data/enzymes.tsv from the raw UniProt tables.
 
-Run from the task directory: python -m scripts.build_dataset
+Run from code/: python -m scripts.build_dataset (reads and writes data/ at the repository root)
 """
 import pandas as pd
 

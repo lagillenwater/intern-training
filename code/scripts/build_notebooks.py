@@ -3,8 +3,9 @@
 Reads jupytext percent-format files from reference/notebooks/NN_*.py and writes
   - reference/build/NN_*.ipynb : full notebooks with solutions, for execution
   - notebooks/NN_*.ipynb       : public starters with solution blocks stripped
+All three folders are at the repository root; requirements.txt is in code/.
 
-Run from the task directory: python -m scripts.build_notebooks
+Run from code/: python -m scripts.build_notebooks
 """
 import argparse
 import re
@@ -12,6 +13,8 @@ from pathlib import Path
 
 import jupytext
 import nbformat
+
+from helpers.data import task_dir
 
 REPO_URL = "https://github.com/lagillenwater/intern-training"
 PINNED = ("transformers", "accelerate", "umap-learn")
@@ -33,7 +36,7 @@ IN_COLAB = "google.colab" in sys.modules
 
 if IN_COLAB:
     # On Colab: download the course materials once.
-    TASK_DIR = Path("/content/intern-training/tasks/esm2-enzyme-transfer")
+    TASK_DIR = Path("/content/intern-training")
     if not TASK_DIR.exists():
         subprocess.run(
             ["git", "clone", "--depth", "1", "--branch", "{materials_ref}",
@@ -47,17 +50,17 @@ if IN_COLAB:
     )
 else:
     # On a laptop: walk up from the current folder until we find the folder
-    # that holds both helpers/ and checks.py.
+    # whose code/ folder holds both helpers/ and checks.py.
     TASK_DIR = None
     for folder in [Path.cwd(), *Path.cwd().parents]:
-        if (folder / "helpers").is_dir() and (folder / "checks.py").exists():
+        if (folder / "code" / "helpers").is_dir() and (folder / "code" / "checks.py").exists():
             TASK_DIR = folder
             break
     if TASK_DIR is None:
-        raise RuntimeError("Could not find the course materials (a folder with helpers/ and checks.py).")
+        raise RuntimeError("Could not find the course materials (a folder with code/helpers/ and code/checks.py).")
 
 # Make our helper code importable, then load it.
-sys.path.insert(0, str(TASK_DIR))
+sys.path.insert(0, str(TASK_DIR / "code"))
 from helpers import *
 from checks import *
 
@@ -76,7 +79,7 @@ def read_pins(requirements: Path) -> list:
 
 def setup_cell(materials_ref: str) -> str:
     """Return the source of the first code cell of every notebook."""
-    pins = read_pins(Path(__file__).resolve().parent.parent / "requirements.txt")
+    pins = read_pins(task_dir() / "code" / "requirements.txt")
     pin_args = ", ".join(repr(p) for p in pins)
     return SETUP_TEMPLATE.format(materials_ref=materials_ref, repo_url=REPO_URL, pins=pin_args)
 
@@ -157,7 +160,7 @@ def build(reference_dir: Path, starter_dir: Path, build_dir: Path, materials_ref
 
 def main() -> None:
     """Command-line entry point."""
-    task = Path(__file__).resolve().parent.parent
+    root = task_dir()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--materials-ref", default="esm2-v1", help="git branch or tag Colab clones")
     parser.add_argument("--only", type=Path, help="build only this percent-format .py into SOURCE.ipynb next to it (no stripping)")
@@ -165,7 +168,7 @@ def main() -> None:
     if args.only is not None:
         build_single(args.only, args.materials_ref)
         return
-    build(task / "reference", task / "notebooks", task / "reference" / "build", args.materials_ref)
+    build(root / "reference", root / "notebooks", root / "reference" / "build", args.materials_ref)
 
 
 if __name__ == "__main__":

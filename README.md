@@ -182,7 +182,7 @@ Do these steps before your first session, so that session can start right away.
 
 ## Schedule
 
-The task is about 10 hours. Do the sessions in order. Each of the first six sessions covers one notebook. The notebooks are in `tasks/esm2-enzyme-transfer/notebooks/`. Each one opens by telling you what the step is for and how long it should take.
+The task is about 10 hours. Do the sessions in order. Each of the first six sessions covers one notebook. The notebooks are in `notebooks/`. Each one opens by telling you what the step is for and how long it should take.
 
 The times are guides, not limits. If a session runs long, that is normal. Mention it at your next check-in.
 
@@ -232,7 +232,7 @@ You answer check-in questions without AI. If something is shaky at check-in 1 or
 4. Check the box **Include private repos**. The first time, a pop-up window asks you to let Colab use your GitHub account. Sign in to GitHub and approve it.
 5. In the search box, type your GitHub username and press Enter.
 6. Under **Repository**, choose your private copy. Under **Branch**, choose your working branch (for example `my-work`), not `main`.
-7. Click the notebook you want, for example `tasks/esm2-enzyme-transfer/notebooks/00_python_primer.ipynb`.
+7. Click the notebook you want, for example `notebooks/00_python_primer.ipynb`.
 8. If Colab warns that the notebook was not written by Google, click **Run anyway**. The notebook came from your own copy.
 9. For Notebooks 02, 03, and 05, switch to a GPU before you run anything: **Runtime > Change runtime type**, choose **T4 GPU**, and click **Save**.
 10. Run the first cell, the setup cell: click on it and press Shift+Enter (or click the play button on its left). Then run the Configuration cell just below it. The Configuration cell asks to connect Google Drive: click **Connect to Google Drive**, choose your personal account, and allow access.
@@ -249,7 +249,7 @@ Colab does not save your notebook to GitHub by itself. To save it:
 
 1. Click **File > Save a copy in GitHub**.
 2. Under **Repository**, choose your private copy. Under **Branch**, choose your working branch.
-3. Check that the file path matches where the notebook lives, for example `tasks/esm2-enzyme-transfer/notebooks/01_explore_data.ipynb`. That way your version replaces the starting version on your branch.
+3. Check that the file path matches where the notebook lives, for example `notebooks/01_explore_data.ipynb`. That way your version replaces the starting version on your branch.
 4. In **Commit message**, write a short note about what you did, such as `Finish class counts in Notebook 01`. A **commit** is a saved snapshot of your files, with a message that says what changed.
 5. Click **OK**.
 
@@ -311,7 +311,7 @@ Your mentor may ask about your predictions and your AI log at check-ins.
 To add a row to `AI_LOG.md`:
 
 1. On GitHub, go to your private copy and switch to your working branch with the button that says `main`.
-2. Open `tasks/esm2-enzyme-transfer/AI_LOG.md`.
+2. Open `AI_LOG.md`.
 3. Click the pencil icon (**Edit this file**).
 4. Add a new line at the bottom of the table, following the example row.
 5. Click **Commit changes**, make sure it will commit to your working branch, and confirm.

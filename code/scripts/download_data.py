@@ -1,6 +1,6 @@
 """Download reviewed, EC-annotated proteins for each species from UniProt.
 
-Run from the task directory: python -m scripts.download_data --out data
+Run from code/: python -m scripts.download_data (writes to data/ at the repository root)
 """
 import argparse
 import datetime
@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from helpers.data import SPECIES, SPECIES_ORDER
+from helpers.data import SPECIES, SPECIES_ORDER, task_dir
 
 STREAM_URL = "https://rest.uniprot.org/uniprotkb/stream"
 QUERY_TEMPLATE = "reviewed:true AND organism_id:{taxon_id} AND ec:*"
@@ -63,5 +63,5 @@ def main(out_dir: Path) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", type=Path, default=Path("data"))
+    parser.add_argument("--out", type=Path, default=task_dir() / "data")
     main(parser.parse_args().out)
