@@ -12,6 +12,14 @@ from helpers.data import (
     load_raw,
     task_dir,
 )
+from helpers.evaluation import (
+    bootstrap_ci,
+    macro_f1_matrix,
+    paired_bootstrap_diff,
+    paired_differences,
+    per_class_f1,
+    score_table,
+)
 
 __all__ = [
     "CLASS_NAMES",
@@ -19,11 +27,17 @@ __all__ = [
     "SPECIES",
     "SPECIES_ORDER",
     "assign_human_split",
+    "bootstrap_ci",
     "build_dataset",
     "ec_classes",
     "eggnog_ids",
     "load_dataset",
     "load_divergence",
     "load_raw",
+    "macro_f1_matrix",
+    "paired_bootstrap_diff",
+    "paired_differences",
+    "per_class_f1",
+    "score_table",
     "task_dir",
 ]

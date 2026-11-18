@@ -54,3 +54,36 @@ def raw_fixture():
     )
     empty = human.iloc[0:0]
     return {"human": human, "mouse": mouse, "fly": empty, "yeast": empty, "ecoli": empty}
+
+
+@pytest.fixture
+def preds_fixture():
+    """Deterministic predictions for all five species (300 rows each).
+
+    Yeast truth has no class 7. Floor predicts one class; fine-tuned is
+    clearly better than baseline."""
+    from helpers.data import SPECIES_ORDER
+
+    rng = np.random.default_rng(7)
+    frames = []
+    for species in SPECIES_ORDER:
+        n = 300
+        max_class = 6 if species == "yeast" else 7
+        y_true = rng.integers(1, max_class + 1, n)
+
+        def noisy(p_correct):
+            return np.where(rng.random(n) < p_correct, y_true, rng.integers(1, 8, n))
+
+        frames.append(
+            pd.DataFrame(
+                {
+                    "accession": [f"{species}_{i:04d}" for i in range(n)],
+                    "species": species,
+                    "y_true": y_true,
+                    "y_pred_floor": 1,
+                    "y_pred_baseline": noisy(0.45),
+                    "y_pred_finetuned": noisy(0.85),
+                }
+            )
+        )
+    return pd.concat(frames, ignore_index=True)
