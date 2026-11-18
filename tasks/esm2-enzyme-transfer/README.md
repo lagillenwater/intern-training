@@ -159,8 +159,8 @@ Do these steps before your first session, so that session can start right away.
 
 - [ ] **1. A personal Google account that can open Colab.** Go to colab.research.google.com, sign in, and make a new notebook. In the first cell, type `print("hello")` and press Shift+Enter. If you see `hello` appear, it works. Use a personal account, not a school account: school accounts often block Colab. Your Google account also comes with Google Drive, where the notebooks will save your work.
 - [ ] **2. A GitHub account.** GitHub is a website that stores code projects and their history. If you do not have an account, sign up for free at github.com.
-- [ ] **3. Your private copy of this repository.** A **repository** is a project folder on GitHub that keeps every version of its files. This repository is public, which means anyone can see it. You will work in your own private copy, so only you and your mentor can see your work and your answers. To make it:
-  1. Open this repository's page on GitHub. Your mentor will send you the link.
+- [ ] **3. Your private copy.** A **repository** is a project folder on GitHub that keeps every version of its files. The original repository for this task is public, which means anyone can see it. You will work in your own private copy of it, so only you and your mentor can see your work and your answers. To make it:
+  1. Open the original repository's page on GitHub. Your mentor will send you the link.
   2. Click the green **Use this template** button, then **Create a new repository**.
   3. Leave **Include all branches** unchecked.
   4. Under **Owner**, choose your own account. For **Repository name**, type a name such as `intern-training`.
