@@ -16,7 +16,9 @@ from helpers.data import CLASS_NAMES, SPECIES_ORDER
 
 # Categorical slots 1-5 and 1-7 of the reference palette, in fixed order.
 SPECIES_COLORS = dict(zip(SPECIES_ORDER, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]))
-CLASS_COLORS = dict(zip(CLASS_NAMES, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6"]))
+CLASS_COLORS = dict(zip(CLASS_NAMES, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#5b3a29", "#6250d6"]))
+# Class marker shapes, so classes with similar colors stay distinguishable in a dense cloud.
+CLASS_MARKERS = dict(zip(CLASS_NAMES, ["o", "s", "^", "D", "v", "P", "h"]))
 # Models are a different kind of category from species, so they avoid the species hues.
 MODEL_COLORS = {"floor": "#8a8984", "baseline": "#52514e", "finetuned": "#6250d6"}
 INK = "#0b0b0b"
@@ -32,7 +34,10 @@ def _style_axes(ax) -> None:
 
 
 def plot_distance_curve(
-    results: pd.DataFrame, divergence: pd.DataFrame, models: Sequence[str] = ("baseline", "finetuned")
+    results: pd.DataFrame,
+    divergence: pd.DataFrame,
+    models: Sequence[str] = ("baseline", "finetuned"),
+    title: str = "Macro-F1 by species, ordered by distance from human",
 ) -> Figure:
     """Plot macro-F1 (with 95% intervals) against species, ordered by evolutionary distance."""
     mya = divergence.set_index("species")["mya"].reindex(SPECIES_ORDER)
@@ -56,7 +61,7 @@ def plot_distance_curve(
     ax.set_ylim(0, 1)
     ax.set_xlabel("Species, from closest to furthest from human", color=INK_SOFT)
     ax.set_ylabel("Macro-F1 (higher is better)", color=INK_SOFT)
-    ax.set_title("Prediction quality drops as species get further from human", color=INK, loc="left")
+    ax.set_title(title, color=INK, loc="left")
     ax.grid(axis="y", color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
     _style_axes(ax)
@@ -123,14 +128,15 @@ def plot_umap(coords: np.ndarray, labels, title: str, ax=None) -> Figure:
     """Scatter 2-D coordinates colored by species or by enzyme class.
 
     Labels that are species names use the species colors; integer labels 1-7 use the
-    class colors. Each category always gets the same color.
+    class colors. Each category always gets the same color (and, for classes, the same marker shape).
     """
     labels = pd.Series(np.asarray(labels, dtype=object))
     if labels.isin(SPECIES_COLORS).all():
         colors, names = SPECIES_COLORS, {s: s for s in SPECIES_ORDER}
+        markers = dict.fromkeys(SPECIES_ORDER, "o")
     else:
         labels = labels.astype(int)
-        colors, names = CLASS_COLORS, CLASS_NAMES
+        colors, names, markers = CLASS_COLORS, CLASS_NAMES, CLASS_MARKERS
     if ax is None:
         _, ax = plt.subplots(figsize=(7, 5.5))
     coords = np.asarray(coords)
@@ -138,7 +144,7 @@ def plot_umap(coords: np.ndarray, labels, title: str, ax=None) -> Figure:
     for key in present:
         mask = (labels == key).to_numpy()
         ax.scatter(
-            coords[mask, 0], coords[mask, 1], s=14, color=colors[key], alpha=0.8,
+            coords[mask, 0], coords[mask, 1], s=18, color=colors[key], marker=markers[key], alpha=0.85,
             edgecolors="white", linewidths=0.3, label=names[key],
         )
     ax.set_xlabel("UMAP 1 (axes have no units)", color=INK_SOFT)

@@ -58,3 +58,17 @@ def test_umap_class_labels():
     fig = plot_umap(np.zeros((3, 2)), [1, 3, 3], "c")
     assert set(_legend_colors(fig)) == {"Oxidoreductases", "Hydrolases"}
     plt.close(fig)
+
+
+def test_distance_curve_neutral_title(results_fixture, divergence_fixture):
+    fig = plot_distance_curve(results_fixture, divergence_fixture)
+    assert "drop" not in fig.axes[0].get_title(loc="left").lower()
+    fig2 = plot_distance_curve(results_fixture, divergence_fixture, title="Custom")
+    assert fig2.axes[0].get_title(loc="left") == "Custom"
+    plt.close("all")
+
+
+def test_umap_class_markers_distinct():
+    from helpers.plots import CLASS_COLORS, CLASS_MARKERS
+
+    assert len(set(CLASS_MARKERS.values())) == 7 and len(set(CLASS_COLORS.values())) == 7
