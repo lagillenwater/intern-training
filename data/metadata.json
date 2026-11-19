@@ -1,0 +1,13 @@
+{
+  "downloaded": "2026-11-18",
+  "uniprot_release": "2026_04",
+  "query_template": "reviewed:true AND organism_id:{taxon_id} AND ec:*",
+  "fields": "accession,organism_id,gene_primary,protein_name,ec,length,sequence,xref_eggnog",
+  "counts": {
+    "human": 4616,
+    "mouse": 4454,
+    "fly": 1152,
+    "yeast": 1809,
+    "ecoli": 1748
+  }
+}
